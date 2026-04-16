@@ -2,7 +2,7 @@
 
 import AppLayout from "@/components/AppLayout";
 import { useEffect, useState, useCallback } from "react";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, cn } from "@/lib/utils";
 import {
   Users,
   Search,
@@ -67,6 +67,7 @@ export default function ClientesPage() {
   const [selected, setSelected] = useState<CustomerDetail | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [expandedSale, setExpandedSale] = useState<string | null>(null);
+  const [mobileDetailOpen, setMobileDetailOpen] = useState(false);
 
   const loadCustomers = useCallback(async () => {
     setLoading(true);
@@ -90,6 +91,7 @@ export default function ClientesPage() {
   const openCustomer = async (id: string) => {
     setLoadingDetail(true);
     setSelected(null);
+    setMobileDetailOpen(true);
     try {
       const res = await fetch(`/api/customers/${id}`);
       if (!res.ok) { toast.error("Erro ao carregar cliente"); return; }
@@ -108,7 +110,7 @@ export default function ClientesPage() {
     <AppLayout>
     <div className="flex h-full overflow-hidden">
       {/* Left column — list */}
-      <div className="w-[380px] flex flex-col border-r border-border bg-card flex-shrink-0">
+      <div className={cn("flex flex-col border-r border-border bg-card flex-shrink-0", "w-full md:w-[380px]", mobileDetailOpen ? "hidden md:flex" : "flex")}>
         <div className="px-5 pt-5 pb-4 border-b border-border">
           <div className="flex items-center gap-2 mb-4">
             <Users size={18} className="text-primary" />
@@ -142,7 +144,7 @@ export default function ClientesPage() {
               <button
                 key={c.id}
                 onClick={() => openCustomer(c.id)}
-                className={`w-full text-left px-5 py-3.5 border-b border-border hover:bg-orange-50 transition-colors flex items-center gap-3 group ${selected?.customer.id === c.id ? "bg-orange-50 border-l-2 border-l-primary" : ""}`}
+                className={`w-full text-left px-5 py-3.5 border-b border-border hover:bg-orange-50 transition-colors flex items-center gap-3 group ${selected?.customer.id === c.id ? "bg-orange-50 md:border-l-2 md:border-l-primary" : ""}`}
               >
                 <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                   <span className="text-sm font-bold text-primary">{c.name.charAt(0).toUpperCase()}</span>
@@ -163,7 +165,7 @@ export default function ClientesPage() {
       </div>
 
       {/* Right column — detail */}
-      <div className="flex-1 overflow-y-auto bg-background">
+      <div className={cn("overflow-y-auto bg-background", "flex-1", mobileDetailOpen ? "flex flex-col" : "hidden md:block")}>
         {loadingDetail && (
           <div className="flex items-center justify-center h-full">
             <div className="w-8 h-8 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
@@ -179,7 +181,12 @@ export default function ClientesPage() {
         )}
 
         {!loadingDetail && selected && (
-          <div className="max-w-2xl mx-auto px-6 py-6">
+          <div className="max-w-2xl mx-auto px-4 md:px-6 py-4 md:py-6">
+            {/* Mobile back button */}
+            <button onClick={() => setMobileDetailOpen(false)} className="md:hidden flex items-center gap-1.5 text-sm text-muted mb-4 hover:text-primary transition-colors">
+              <ArrowLeft size={15} /> Voltar para clientes
+            </button>
+
             {/* Header */}
             <div className="flex items-start gap-4 mb-6">
               <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">

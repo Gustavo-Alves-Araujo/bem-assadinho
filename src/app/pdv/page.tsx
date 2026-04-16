@@ -87,6 +87,7 @@ export default function PDVPage() {
   const [processing, setProcessing] = useState(false);
   const [saleComplete, setSaleComplete] = useState(false);
   const [lastSale, setLastSale] = useState<{ id: string; total: number; change: number } | null>(null);
+  const [mobileView, setMobileView] = useState<"products" | "cart">("products");
   const searchRef = useRef<HTMLInputElement>(null);
 
   const loadProducts = useCallback(async () => {
@@ -257,6 +258,7 @@ export default function PDVPage() {
     setShowPayment(false);
     setSaleComplete(false);
     setLastSale(null);
+    setMobileView("products");
     loadProducts();
   };
 
@@ -294,7 +296,7 @@ export default function PDVPage() {
   return (
     <AppLayout>
     <div className="h-full flex flex-col bg-background overflow-hidden">
-      {/* Top Bar */}
+      {/* Top Bar — desktop only */}
       <div className="h-[52px] bg-white border-b border-border flex items-center justify-between px-5 flex-shrink-0">
         <h1 className="text-[15px] font-bold text-foreground flex items-center gap-2">
           <Store size={15} className="text-primary" />
@@ -309,7 +311,7 @@ export default function PDVPage() {
 
       <div className="flex-1 flex overflow-hidden">
         {/* Left - Products */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className={cn("flex-1 flex flex-col overflow-hidden", mobileView === "cart" ? "hidden md:flex" : "flex")}>
           {/* Search */}
           <div className="p-4 border-b border-border bg-card">
             <div className="relative">
@@ -417,16 +419,34 @@ export default function PDVPage() {
               </div>
             )}
           </div>
+
+          {/* Mobile: floating cart bar */}
+          {mobileView === "products" && (
+            <div className="md:hidden flex-shrink-0 p-3 border-t border-border bg-white">
+              <button
+                onClick={() => setMobileView("cart")}
+                disabled={cart.length === 0}
+                className="w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-between px-4 disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{ background: cart.length > 0 ? "linear-gradient(135deg,#f97316,#ea580c)" : undefined, backgroundColor: cart.length === 0 ? "#f3f4f6" : undefined, color: cart.length > 0 ? "white" : "#6b7280" }}
+              >
+                <span>{totalItems > 0 ? `${totalItems} ${totalItems === 1 ? "item" : "itens"}` : "Carrinho vazio"}</span>
+                <span className="tabular-nums">{totalItems > 0 ? formatCurrency(total) : ""}</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Right - Cart */}
-        <div className="w-[400px] bg-card border-l border-border flex flex-col flex-shrink-0">
+        <div className={cn("bg-card border-l border-border flex flex-col flex-shrink-0", "w-full md:w-[400px]", mobileView === "products" ? "hidden md:flex" : "flex")}>
           {!showPayment ? (
             <>
               {/* Cart Header */}
               <div className="px-4 py-3.5 border-b border-border flex-shrink-0">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
+                    <button onClick={() => setMobileView("products")} className="md:hidden p-1.5 -ml-1 hover:bg-orange-50 rounded-lg transition-colors">
+                      <ArrowLeft size={17} className="text-muted" />
+                    </button>
                     <ShoppingCart size={17} className="text-primary" />
                     <h2 className="font-semibold text-[14px] text-foreground">Carrinho</h2>
                   </div>

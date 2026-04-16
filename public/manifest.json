@@ -1,0 +1,20 @@
+{
+  "name": "PDV Bem Assadinho",
+  "short_name": "Bem Assadinho",
+  "description": "Sistema de ponto de venda – Bem Assadinho",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1c0a00",
+  "theme_color": "#f97316",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "screenshots": []
+}
