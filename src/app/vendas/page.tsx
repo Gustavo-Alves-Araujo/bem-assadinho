@@ -15,6 +15,7 @@ import {
   ShoppingBag,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface SaleItem {
   id: string;
@@ -58,10 +59,12 @@ const statusLabels: Record<string, { label: string; color: string }> = {
 };
 
 export default function VendasPage() {
+  const router = useRouter();
   const [sales, setSales] = useState<Sale[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [expandedSale, setExpandedSale] = useState<string | null>(null);
+  const [authed, setAuthed] = useState(false);
 
   const loadSales = async () => {
     const res = await fetch(`/api/sales?page=${page}&limit=20`);
@@ -71,8 +74,15 @@ export default function VendasPage() {
   };
 
   useEffect(() => {
+    if (sessionStorage.getItem("admin") !== "1") {
+      router.replace("/pdv");
+      return;
+    }
+    setAuthed(true);
     loadSales();
   }, [page]);
+
+  if (!authed) return null;
 
   const todaySales = sales.filter((s) => {
     const today = new Date();

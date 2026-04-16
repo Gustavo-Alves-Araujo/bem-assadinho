@@ -15,6 +15,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { formatCurrency } from "@/lib/utils";
 import Link from "next/link";
 
@@ -58,11 +59,20 @@ const paymentColors: Record<string, string> = {
 };
 
 export default function Dashboard() {
+  const router = useRouter();
   const [data, setData] = useState<DashboardData | null>(null);
+  const [authed, setAuthed] = useState(false);
 
   useEffect(() => {
-    fetch("/api/dashboard").then((r) => r.json()).then(setData);
-  }, []);
+    if (sessionStorage.getItem("admin") !== "1") {
+      router.replace("/pdv");
+    } else {
+      setAuthed(true);
+      fetch("/api/dashboard").then((r) => r.json()).then(setData);
+    }
+  }, [router]);
+
+  if (!authed) return null;
 
   const today = new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
 

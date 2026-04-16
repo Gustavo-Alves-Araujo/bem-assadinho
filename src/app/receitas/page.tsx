@@ -3,6 +3,7 @@
 import AppLayout from "@/components/AppLayout";
 import Modal from "@/components/Modal";
 import { formatCurrency } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 import {
   Plus,
   Trash2,
@@ -69,6 +70,8 @@ const emptyIngredient: Ingredient = {
 };
 
 export default function ReceitasPage() {
+  const router = useRouter();
+  const [authed, setAuthed] = useState(false);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [showRecipeModal, setShowRecipeModal] = useState(false);
   const [showVersionModal, setShowVersionModal] = useState(false);
@@ -103,6 +106,11 @@ export default function ReceitasPage() {
   };
 
   useEffect(() => {
+    if (sessionStorage.getItem("admin") !== "1") {
+      router.replace("/pdv");
+      return;
+    }
+    setAuthed(true);
     loadRecipes();
     loadCatalog();
   }, []);
@@ -252,6 +260,8 @@ export default function ReceitasPage() {
     toast.success("Receita excluída");
     loadRecipes();
   };
+
+  if (!authed) return null;
 
   return (
     <AppLayout>
