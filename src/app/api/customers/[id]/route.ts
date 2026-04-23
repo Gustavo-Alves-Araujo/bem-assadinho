@@ -19,7 +19,7 @@ export async function GET(
         created_at,
         sale_items (
           quantity,
-          unit_price,
+          price,
           products ( name )
         )
       `)
@@ -44,7 +44,7 @@ export async function GET(
       return {
         productName: (Array.isArray(p) ? p[0]?.name : p?.name) || "?",
         quantity: item.quantity,
-        unitPrice: item.unit_price,
+        unitPrice: item.price,
       };
     }),
   }));

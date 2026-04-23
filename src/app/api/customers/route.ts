@@ -40,9 +40,29 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Nome é obrigatório" }, { status: 400 });
   }
 
+  const cleanPhone = phone?.trim() || null;
+
+  if (cleanPhone) {
+    const { data: existing } = await supabase
+      .from("customers")
+      .select("id, name, phone, created_at")
+      .eq("phone", cleanPhone)
+      .maybeSingle();
+
+    if (existing) {
+      return NextResponse.json(
+        {
+          error: "Telefone já cadastrado",
+          existingCustomer: { id: existing.id, name: existing.name, phone: existing.phone, createdAt: existing.created_at },
+        },
+        { status: 409 }
+      );
+    }
+  }
+
   const { data, error } = await supabase
     .from("customers")
-    .insert({ name: name.trim(), phone: phone?.trim() || null })
+    .insert({ name: name.trim(), phone: cleanPhone })
     .select()
     .single();
 

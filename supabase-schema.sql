@@ -55,6 +55,21 @@ create table if not exists stock_movements (
 create index if not exists idx_stock_movements_product on stock_movements (product_id);
 
 -- ============================================================
+-- CUSTOMERS
+-- ============================================================
+create table if not exists customers (
+  id          uuid primary key default uuid_generate_v4(),
+  name        text not null,
+  phone       text unique,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+
+create trigger trg_customers_updated_at
+  before update on customers
+  for each row execute function set_updated_at();
+
+-- ============================================================
 -- SALES
 -- ============================================================
 create table if not exists sales (
@@ -64,6 +79,7 @@ create table if not exists sales (
   discount        numeric(12, 2) not null default 0,
   payment_method  text not null check (payment_method in ('cash', 'credit', 'debit', 'pix')),
   status          text not null default 'completed' check (status in ('completed', 'cancelled', 'pending')),
+  customer_id     uuid references customers (id) on delete set null,
   customer_name   text,
   transaction_id  text,
   created_at      timestamptz not null default now(),
@@ -72,6 +88,7 @@ create table if not exists sales (
 
 create index if not exists idx_sales_status     on sales (status);
 create index if not exists idx_sales_created_at on sales (created_at desc);
+create index if not exists idx_sales_customer   on sales (customer_id);
 
 -- ============================================================
 -- SALE ITEMS
@@ -164,6 +181,7 @@ create trigger trg_recipes_updated_at
 -- ROW LEVEL SECURITY (RLS) — enable and lock down by default
 -- Adjust policies according to your auth strategy.
 -- ============================================================
+alter table customers          enable row level security;
 alter table categories        enable row level security;
 alter table products          enable row level security;
 alter table stock_movements   enable row level security;
@@ -175,6 +193,7 @@ alter table recipe_ingredients enable row level security;
 
 -- Example: allow all access for authenticated users (service-role key bypasses RLS)
 -- Remove / tighten these policies before going to production with anon access.
+create policy "allow_all_authenticated" on customers          for all to authenticated using (true) with check (true);
 create policy "allow_all_authenticated" on categories        for all to authenticated using (true) with check (true);
 create policy "allow_all_authenticated" on products          for all to authenticated using (true) with check (true);
 create policy "allow_all_authenticated" on stock_movements   for all to authenticated using (true) with check (true);

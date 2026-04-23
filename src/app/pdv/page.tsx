@@ -207,6 +207,7 @@ export default function PDVPage() {
     try {
       // Resolve or create customer
       let customerId = selectedCustomer?.id || null;
+      let resolvedCustomerName = selectedCustomer?.name || customerSearch.trim();
       if (!customerId && customerSearch.trim()) {
         const cRes = await fetch("/api/customers", {
           method: "POST",
@@ -214,7 +215,17 @@ export default function PDVPage() {
           body: JSON.stringify({ name: customerSearch.trim(), phone: customerPhone.trim() || null }),
         });
         const cData = await cRes.json();
-        customerId = cData.id;
+        if (cRes.status === 409 && cData.existingCustomer) {
+          customerId = cData.existingCustomer.id;
+          resolvedCustomerName = cData.existingCustomer.name;
+          toast(`Telefone já cadastrado para ${cData.existingCustomer.name}`, { icon: "ℹ️" });
+        } else if (!cRes.ok) {
+          toast.error(cData.error || "Erro ao criar cliente");
+          setProcessing(false);
+          return;
+        } else {
+          customerId = cData.id;
+        }
       }
 
       // Register sale directly (no external payment processor)
@@ -230,6 +241,7 @@ export default function PDVPage() {
           discount,
           paymentMethod,
           customerId,
+          customerName: resolvedCustomerName || null,
           status: "completed",
         }),
       });
