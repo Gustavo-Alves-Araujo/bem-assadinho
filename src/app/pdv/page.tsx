@@ -83,7 +83,7 @@ export default function PDVPage() {
   const [customerSuggestions, setCustomerSuggestions] = useState<Customer[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [showCustomerDrop, setShowCustomerDrop] = useState(false);
-  const [receivedAmount, setReceivedAmount] = useState(0);
+  const [receivedItems, setReceivedItems] = useState<{ value: number; label: string; id: number }[]>([]);
   const [processing, setProcessing] = useState(false);
   const [saleComplete, setSaleComplete] = useState(false);
   const [lastSale, setLastSale] = useState<{ id: string; total: number; change: number } | null>(null);
@@ -190,6 +190,7 @@ export default function PDVPage() {
   );
   const total = subtotal - discount;
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const receivedAmount = Math.round(receivedItems.reduce((sum, i) => sum + i.value, 0) * 100) / 100;
   const change = Math.round((receivedAmount - total) * 100) / 100;
 
   const handlePayment = async () => {
@@ -265,7 +266,7 @@ export default function PDVPage() {
     setSelectedCustomer(null);
     setCustomerSuggestions([]);
     setShowCustomerDrop(false);
-    setReceivedAmount(0);
+    setReceivedItems([]);
     setPaymentMethod("cash");
     setShowPayment(false);
     setSaleComplete(false);
@@ -665,7 +666,7 @@ export default function PDVPage() {
                       { method: "debit" as const, label: "Débito", icon: Smartphone },
                       { method: "credit" as const, label: "Crédito", icon: CreditCard },
                     ]).map((pm) => (
-                      <button key={pm.method} onClick={() => { setPaymentMethod(pm.method); setReceivedAmount(0); }}
+                      <button key={pm.method} onClick={() => { setPaymentMethod(pm.method); setReceivedItems([]); }}
                         className={cn("flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all text-xs font-semibold",
                           paymentMethod === pm.method ? "border-primary bg-primary/5 text-primary" : "border-border text-muted hover:border-orange-200")}>
                         <pm.icon size={20} />{pm.label}
@@ -697,11 +698,26 @@ export default function PDVPage() {
                       )}
                     </div>
 
+                    {/* Lista de notas/moedas selecionadas */}
+                    {receivedItems.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {receivedItems.map((item) => (
+                          <button
+                            key={item.id}
+                            onClick={() => setReceivedItems((prev) => prev.filter((i) => i.id !== item.id))}
+                            className="flex items-center gap-1 bg-amber-100 text-amber-800 border border-amber-200 rounded-lg px-2 py-1 text-xs font-semibold hover:bg-red-100 hover:border-red-200 hover:text-red-700 transition-colors"
+                          >
+                            {item.label} <X size={9} />
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
                     <div>
                       <p className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-1.5">Notas</p>
                       <div className="grid grid-cols-4 gap-1.5">
                         {BILLS.map((bill) => (
-                          <button key={bill.value} onClick={() => setReceivedAmount((v) => Math.round((v + bill.value) * 100) / 100)}
+                          <button key={bill.value} onClick={() => setReceivedItems((prev) => [...prev, { value: bill.value, label: bill.label, id: Date.now() + Math.random() }])}
                             className="py-2.5 bg-amber-50 hover:bg-amber-100 active:scale-95 border border-amber-200 rounded-lg text-xs font-bold text-amber-800 transition-all">
                             {bill.label}
                           </button>
@@ -713,7 +729,7 @@ export default function PDVPage() {
                       <p className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-1.5">Moedas</p>
                       <div className="grid grid-cols-5 gap-1.5">
                         {COINS.map((coin) => (
-                          <button key={coin.value} onClick={() => setReceivedAmount((v) => Math.round((v + coin.value) * 100) / 100)}
+                          <button key={coin.value} onClick={() => setReceivedItems((prev) => [...prev, { value: coin.value, label: coin.label, id: Date.now() + Math.random() }])}
                             className="py-2.5 bg-stone-50 hover:bg-stone-100 active:scale-95 border border-stone-200 rounded-lg text-[11px] font-bold text-stone-700 transition-all">
                             {coin.label}
                           </button>
@@ -721,8 +737,8 @@ export default function PDVPage() {
                       </div>
                     </div>
 
-                    {receivedAmount > 0 && (
-                      <button onClick={() => setReceivedAmount(0)} className="flex items-center gap-1.5 text-xs text-muted hover:text-red-500 transition-colors">
+                    {receivedItems.length > 0 && (
+                      <button onClick={() => setReceivedItems([])} className="flex items-center gap-1.5 text-xs text-muted hover:text-red-500 transition-colors">
                         <RotateCcw size={12} /> Zerar valor recebido
                       </button>
                     )}

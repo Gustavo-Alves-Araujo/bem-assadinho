@@ -41,6 +41,19 @@ create trigger trg_customers_updated_at
 -- RLS (safe to re-enable)
 alter table customers enable row level security;
 
+-- Allow anon key (used by the app) and authenticated users
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies
+    where tablename = 'customers' and policyname = 'allow_all_anon'
+  ) then
+    execute 'create policy "allow_all_anon" on customers
+      for all to anon using (true) with check (true)';
+  end if;
+end;
+$$;
+
 do $$
 begin
   if not exists (
