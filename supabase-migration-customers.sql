@@ -10,6 +10,8 @@ create table if not exists customers (
   updated_at  timestamptz not null default now()
 );
 
+
+
 -- Add UNIQUE constraint on phone if it doesn't exist yet
 do $$
 begin
